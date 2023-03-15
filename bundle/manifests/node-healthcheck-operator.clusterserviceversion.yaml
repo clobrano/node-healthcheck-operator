@@ -358,8 +358,6 @@ spec:
                     drop:
                     - ALL
               priorityClassName: system-cluster-critical
-              securityContext:
-                runAsNonRoot: true
               serviceAccountName: node-healthcheck-controller-manager
               terminationGracePeriodSeconds: 10
               tolerations:

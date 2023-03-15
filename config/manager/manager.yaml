@@ -75,7 +75,5 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
-      securityContext:
-        runAsNonRoot: true
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

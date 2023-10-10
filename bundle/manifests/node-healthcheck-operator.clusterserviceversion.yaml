@@ -404,6 +404,9 @@ spec:
                 - --upstream=http://127.0.0.1:8080/
                 - --logtostderr=true
                 - --v=10
+                - --tls-cert-file=/etc/tls/private/tls.crt
+                - --tls-private-key-file=/etc/tls/private/tls.key
+                - --allow-paths=/metrics
                 image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0
                 name: kube-rbac-proxy
                 ports:
@@ -421,6 +424,10 @@ spec:
                   capabilities:
                     drop:
                     - ALL
+                volumeMounts:
+                - mountPath: /etc/tls/private
+                  name: secret-nhc-kube-rbac-proxy-tls
+                  readOnly: true
               - args:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=127.0.0.1:8080
@@ -473,6 +480,10 @@ spec:
               - effect: NoExecute
                 key: node-role.kubernetes.io/infra
                 operator: Exists
+              volumes:
+              - name: secret-nhc-kube-rbac-proxy-tls
+                secret:
+                  secretName: nhc-kube-rbac-proxy-tls
       - label:
           app.kubernetes.io/component: node-remediation-console-plugin
           app.kubernetes.io/name: node-healthcheck-operator

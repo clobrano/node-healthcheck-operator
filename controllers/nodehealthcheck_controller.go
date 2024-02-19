@@ -543,10 +543,12 @@ func (r *NodeHealthCheckReconciler) remediate(ctx context.Context, node *v1.Node
 
 	currentRemediationDuration, previousRemediationsDuration := utils.GetRemediationDuration(nhc, remediationCR)
 
+	r.Log.Info("creating remediation CR", "name", remediationCR.GetName(), "node name", node.Name, "curr remediation duration", currentRemediationDuration, "prev remediations duration", previousRemediationsDuration)
 	// create remediation CR
 	created, leaseRequeueIn, err := rm.CreateRemediationCR(remediationCR, nhc, &node.Name, currentRemediationDuration, previousRemediationsDuration)
 
 	if err != nil {
+		r.Log.Info("An unhealthy node exists, but remediation couldn't be created because lease wasn't obtained")
 		// An unhealthy node exists, but remediation couldn't be created because lease wasn't obtained
 		if _, isLeaseAlreadyTaken := err.(lease.AlreadyHeldError); isLeaseAlreadyTaken {
 			return leaseRequeueIn, nil
@@ -598,6 +600,7 @@ func (r *NodeHealthCheckReconciler) remediate(ctx context.Context, node *v1.Node
 	if timeout == nil {
 		// no timeout set for classic remediation
 		// nothing to do anymore here
+		log.Info("remediation already exists, no timeout set")
 		return leaseRequeueIn, nil
 	}
 
@@ -634,6 +637,7 @@ func (r *NodeHealthCheckReconciler) remediate(ctx context.Context, node *v1.Node
 	}
 
 	// add timeout annotation to remediation CR
+	log.Info(">>> adding timeout annotation to remediation CR", "name", remediationCR.GetName())
 	if err := r.addTimeOutAnnotation(rm, remediationCR, now); err != nil {
 		return nil, err
 	}
@@ -645,6 +649,7 @@ func (r *NodeHealthCheckReconciler) remediate(ctx context.Context, node *v1.Node
 }
 
 func (r *NodeHealthCheckReconciler) addTimeOutAnnotation(rm resources.Manager, remediationCR *unstructured.Unstructured, now metav1.Time) error {
+	r.Log.Info("adding timeout annotation to remediation CR", "name", remediationCR.GetName())
 	annotations := remediationCR.GetAnnotations()
 	if annotations == nil {
 		annotations = make(map[string]string, 1)

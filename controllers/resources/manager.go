@@ -178,6 +178,7 @@ func (m *manager) CreateRemediationCR(remediationCR *unstructured.Unstructured, 
 		m.log.Info("external remediation CR already exists", "CR name", remediationCR.GetName(), "kind", remediationCR.GetKind(), "namespace", remediationCR.GetNamespace())
 		if nodeName == nil {
 			// we can't create a node lease, there is no known node (e.g. for failed Machines)
+			m.log.Info("No node name provided, skipping lease management")
 			return false, nil, nil
 		}
 		duration, err := m.leaseManager.ManageLease(m.ctx, *nodeName, currentRemediationDuration, previousRemediationsDuration)

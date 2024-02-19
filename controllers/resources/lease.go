@@ -97,16 +97,20 @@ func (m *nhcLeaseManager) ManageLease(ctx context.Context, nodeName string, curr
 	nodeLease, err := m.commonLeaseManager.GetLease(ctx, node)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			m.log.Info("managing lease - lease not found", "node name", nodeName)
 			return 0, nil
 		}
 		m.log.Error(err, "managing lease - couldn't fetch lease", "node name", nodeName)
 		return 0, err
 	}
+	m.log.Info("managing lease - lease fetched", "lease name", nodeLease.Name, "NHC is lease owner", m.isLeaseOwner(nodeLease))
 	//nothing to do with this lease
 	if !m.isLeaseOwner(nodeLease) {
+		m.log.Info("managing lease - lease is not owned by NHC", "lease name", nodeLease.Name, "NHC is lease owner", m.isLeaseOwner(nodeLease))
 		return 0, nil
 	}
 	if isLeaseOverdue, err := m.isLeaseOverdue(nodeLease, currentRemediationDuration, previousRemediationsDuration); err != nil {
+		m.log.Error(err, "managing lease - failed to check if lease is overdue", "node name", nodeName)
 		return 0, err
 	} else if isLeaseOverdue { //release the lease - lease is overdue
 		m.log.Info("managing lease - lease is overdue about to be removed", "lease name", nodeLease.Name)
@@ -115,6 +119,7 @@ func (m *nhcLeaseManager) ManageLease(ctx context.Context, nodeName string, curr
 			return 0, err
 		}
 
+		m.log.Info("managing lease - failed to extend lease, it is overdue", "lease name", nodeLease.Name)
 		return 0, LeaseOverDueError{msg: fmt.Sprintf("failed to extend lease, it is overdue. node name: %s", nodeName)}
 	}
 
